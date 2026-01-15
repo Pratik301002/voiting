@@ -1,47 +1,66 @@
 const express = require("express");
-const fs = require("fs");
+const mongoose = require("mongoose");
 const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Admin credentials
+// =======================
+// ADMIN CREDENTIALS
+// =======================
 const ADMIN_ID = "admin";
 const ADMIN_PASS = "admin123";
 
-// Middleware
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "Public")));
+// =======================
+// MONGODB CONNECTION
+// =======================
+mongoose.connect("mongodb+srv://pratik110301_db_user:bejfhXOQpNMq44kv@cluster0.9rykuvh.mongodb.net/")
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => {
+    console.error("MongoDB connection error:", err);
+    process.exit(1);
+  });
 
-// Serve homepage explicitly (IMPORTANT for Render)
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "Public", "index.html"));
+// =======================
+// SCHEMA & MODEL
+// =======================
+const voteSchema = new mongoose.Schema({
+  name: String,
+  candidate: String,
+  time: { type: Date, default: Date.now }
 });
 
-// Vote submission
-app.post("/vote", (req, res) => {
+const Vote = mongoose.model("Vote", voteSchema);
+
+// =======================
+// MIDDLEWARE
+// =======================
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
+
+// =======================
+// ROUTES
+// =======================
+
+// Home
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// Submit vote
+app.post("/vote", async (req, res) => {
   const { name, candidate } = req.body;
 
   if (!name || !candidate) {
     return res.status(400).json({ message: "Invalid vote data" });
   }
 
-  const votesPath = path.join(__dirname, "votes.json");
-
-  let data = { votes: [] };
-  if (fs.existsSync(votesPath)) {
-    data = JSON.parse(fs.readFileSync(votesPath, "utf-8"));
+  try {
+    await Vote.create({ name, candidate });
+    res.json({ message: "Vote recorded successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Database error" });
   }
-
-  data.votes.push({
-    name,
-    candidate,
-    time: new Date().toISOString()
-  });
-
-  fs.writeFileSync(votesPath, JSON.stringify(data, null, 2));
-
-  res.json({ message: "Vote submitted successfully" });
 });
 
 // Admin login
@@ -56,18 +75,18 @@ app.post("/admin/login", (req, res) => {
 });
 
 // Get votes (admin)
-app.get("/admin/votes", (req, res) => {
-  const votesPath = path.join(__dirname, "votes.json");
-
-  let data = { votes: [] };
-  if (fs.existsSync(votesPath)) {
-    data = JSON.parse(fs.readFileSync(votesPath, "utf-8"));
+app.get("/admin/votes", async (req, res) => {
+  try {
+    const votes = await Vote.find().sort({ time: -1 });
+    res.json(votes);
+  } catch {
+    res.status(500).json([]);
   }
-
-  res.json(data.votes);
 });
 
-// Start server
+// =======================
+// START SERVER
+// =======================
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
