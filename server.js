@@ -55,7 +55,7 @@ const Vote = mongoose.model("Vote", voteSchema);
 // MIDDLEWARE
 // =======================
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "Public")));
 
 // =======================
 // ROUTES
@@ -63,7 +63,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Home page
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "Public", "index.html"));
 });
 
 // Submit vote
