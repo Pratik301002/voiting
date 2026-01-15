@@ -1,3 +1,6 @@
+// Load environment variables (LOCAL DEV)
+require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
@@ -14,10 +17,16 @@ const ADMIN_PASS = "admin123";
 // =======================
 // MONGODB CONNECTION
 // =======================
-mongoose.connect("mongodb+srv://pratik110301_db_user:bejfhXOQpNMq44kv@cluster0.9rykuvh.mongodb.net/")
-  .then(() => console.log("MongoDB connected"))
-  .catch(err => {
-    console.error("MongoDB connection error:", err);
+if (!process.env.MONGO_URI) {
+  console.error("❌ MONGO_URI not found in environment variables");
+  process.exit(1);
+}
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   });
 
@@ -25,9 +34,19 @@ mongoose.connect("mongodb+srv://pratik110301_db_user:bejfhXOQpNMq44kv@cluster0.9
 // SCHEMA & MODEL
 // =======================
 const voteSchema = new mongoose.Schema({
-  name: String,
-  candidate: String,
-  time: { type: Date, default: Date.now }
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  candidate: {
+    type: String,
+    required: true,
+  },
+  time: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Vote = mongoose.model("Vote", voteSchema);
@@ -42,7 +61,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // ROUTES
 // =======================
 
-// Home
+// Home page
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
@@ -59,6 +78,7 @@ app.post("/vote", async (req, res) => {
     await Vote.create({ name, candidate });
     res.json({ message: "Vote recorded successfully" });
   } catch (err) {
+    console.error("Vote save error:", err);
     res.status(500).json({ message: "Database error" });
   }
 });
@@ -74,12 +94,13 @@ app.post("/admin/login", (req, res) => {
   }
 });
 
-// Get votes (admin)
+// Get all votes (admin)
 app.get("/admin/votes", async (req, res) => {
   try {
     const votes = await Vote.find().sort({ time: -1 });
     res.json(votes);
-  } catch {
+  } catch (err) {
+    console.error("Fetch votes error:", err);
     res.status(500).json([]);
   }
 });
@@ -88,5 +109,5 @@ app.get("/admin/votes", async (req, res) => {
 // START SERVER
 // =======================
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
