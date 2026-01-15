@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Anonymous Voting</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container" id="voteContainer">
+  <h1>Vote Now</h1>
+  <p>Your vote is anonymous. You can vote only once.</p>
+
+  <input id="name" placeholder="Your Name" />
+  <select id="candidate">
+    <option value="">Select Option</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+  </select>
+
+  <button onclick="vote()">Submit Vote</button>
+
+  <hr style="margin:20px 0;">
+  <button class="admin-btn" onclick="window.location.href='admin.html'">
+    Admin Access
+  </button>
+</div>
+
+<!-- THANK YOU SCREEN -->
+<div class="container" id="thankYouContainer" style="display:none; text-align:center;">
+  <h1>Thank You for Voting</h1>
+  <p style="font-size:16px; margin-top:10px;">
+    Your vote has been successfully recorded.
+  </p>
+
+  <p style="color:#555; margin-top:10px;">
+    The voting process is completely anonymous and secure.
+  </p>
+
+  <div style="margin-top:25px; padding:15px; background:#f1f5f9; border-radius:6px;">
+    <strong>You have already completed your vote.</strong>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
